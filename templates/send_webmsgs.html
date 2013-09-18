@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8"></meta>
+    <title>Twilio Client</title>
+</head>
+<body style="">
+    <h1>Outbound Call</h1>
+    <button id="call">Call</button>
+    <input value="14153296152"></input>
+
+    <h1>Incoming Calls</h1>
+    <p>Your browser's ID is: 5386.  Call 415-329-6152 and enter this ID to call this browser.</p>
+
+    <h1>Hang up</h1>
+    <button id="hangup">hang up any call</button>
+
+    <script src="//ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
+    <script src="//static.twilio.com/libs/twiliojs/1.1/twilio.min.js"></script>
+    <script>
+    Twilio.Device.setup("{{ cap_token }}");
+
+    // Connect an outbound call
+    $('#call').on('click', function() {
+        Twilio.Device.connect({
+            digits:$('input').val()
+            //from:"14153296152"
+        });
+    });
+
+    // Receive an inbound call
+    Twilio.Device.incoming(function(connection) {
+        connection.accept();
+    });
+
+    // Hang up any active call
+    $('#hangup').on('click', function() {
+        Twilio.Device.disconnectAll();
+    });
+    </script>
+    <div style="position: fixed; z-index: 99999; top: 0px; left: 0px; width: 1px; height: 1px; overflow: hidden; visibility: hidden;">
+    <div style="margin: 10% auto 0px; width: 215px; border-top-left-radius: 8px; border-top-right-radius: 8px; border-bottom-right-radius: 8px; border-bottom-left-radius: 8px; background-color: rgb(248, 248, 248); border: 8px solid rgb(160, 160, 160);">
+    <button>Close</button>
+    </div>
+    </div>
+</body>
+
+
+</html>
