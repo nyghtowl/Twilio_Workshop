@@ -1,3 +1,8 @@
+'''
+Sample exercises for Twiliocon 
+
+DON'T FORGET TO UPDATE THE ROUTE ON TWILIO DASHBOARD - esp if running off ngrok
+'''
 import os
 
 from flask import Flask, session, g
@@ -70,48 +75,48 @@ def income_sms():
     return Response(str(response), mimetype='text/xml')
  
 # Setup response for incoming call - first was one response and second provided menu
-# @app.route('/incoming/call')
-# def income_call():
-#     response = twiml.Response()
-#     # response.say('I just responded to a phone call. Huzzah!', voice='man')
-#     with response.gather(numDigits=1, action="/handle-key", method="POST") as g:
-#         g.say("""Welcome to ACME widgets, press 1 for support. Press 2 for sales. Press 3 to leave a message. Press 4 to playback the last message. Press 5 to playback all messages. Press 0 to talk to a human.""")
-#     return Response(str(response), mimetype='text/xml')
+@app.route('/incoming/call')
+def income_call():
+    response = twiml.Response()
+    # response.say('I just responded to a phone call. Huzzah!', voice='man')
+    with response.gather(numDigits=1, action="/handle-key", method="POST") as g:
+        g.say("""Welcome to ACME widgets, press 1 for support. Press 2 for sales. Press 3 to leave a message. Press 4 to playback the last message. Press 5 to playback all messages. Press 0 to talk to a human.""")
+    return Response(str(response), mimetype='text/xml')
 
 # Handle incoming call menu items
-# @app.route('/handle-key', methods=['GET', 'POST'])
-# def handle_key():
-#     response = twiml.Response()
-#     digit_pressed = request.values.get('Digits', None)
-#     if digit_pressed == "1":
-#         response.say('You selected support. Hanging up now', voice='man')
-#         return Response(str(response), mimetype='text/xml')
-#     elif digit_pressed == "2":
-#         response.say('You selected salse. Hanging up now', voice='man')
-#         return Response(str(response), mimetype='text/xml')
-#     elif digit_pressed == "3":
-#         response.say("Record your message after the tone.")
-#         response.record(maxLength="30", action="/handle-recording")
-#         return Response(str(response), mimetype='text/xml')
-#     elif digit_pressed == "4":
-#         for recording in client.recordings.list():
-#             response.play(recording.uri)
-#             return Response(str(response), mimetype='text/xml')
-#     elif digit_pressed == "5":
-#         for recording in client.recordings.list():
-#             response.play(recording.uri)
-#         return Response(str(response), mimetype='text/xml')
-#     elif digit_pressed == "0":
-#         response.dial("+14152157178")
-#         return Response(str(response), mimetype='text/xml')
-#     else:
-#         return redirect('/')
+@app.route('/handle-key', methods=['GET', 'POST'])
+def handle_key():
+    response = twiml.Response()
+    digit_pressed = request.values.get('Digits', None)
+    if digit_pressed == "1":
+        response.say('You selected support. Hanging up now', voice='man')
+        return Response(str(response), mimetype='text/xml')
+    elif digit_pressed == "2":
+        response.say('You selected salse. Hanging up now', voice='man')
+        return Response(str(response), mimetype='text/xml')
+    elif digit_pressed == "3":
+        response.say("Record your message after the tone.")
+        response.record(maxLength="30", action="/handle-recording")
+        return Response(str(response), mimetype='text/xml')
+    elif digit_pressed == "4":
+        for recording in client.recordings.list():
+            response.play(recording.uri)
+            return Response(str(response), mimetype='text/xml')
+    elif digit_pressed == "5":
+        for recording in client.recordings.list():
+            response.play(recording.uri)
+        return Response(str(response), mimetype='text/xml')
+    elif digit_pressed == "0":
+        response.dial("+14152157178")
+        return Response(str(response), mimetype='text/xml')
+    else:
+        return redirect('/')
 
-# @app.route("/handle-recording", methods=['GET', 'POST'])
-# def handle_recording():
-#     """Play back the caller's recording."""
+@app.route("/handle-recording", methods=['GET', 'POST'])
+def handle_recording():
+    """Play back the caller's recording."""
  
-#     return request.values.get("RecordingUrl", None)
+    return request.values.get("RecordingUrl", None)
 
 # Exercise 5 - Make inbound and outbound calls from a webpage
 @app.route('/voice', methods=['GET', 'POST'])
@@ -121,12 +126,12 @@ def voice():
     # Nest <Client> Twiml inside of a <Dial> verb
     with response.dial(callerId=default_number) as r:
         #If theres a number and it looks like a phone number
-        r.say('Enter the digits on the screen', voice='man')
+        # r.say('Enter the digits on the screen', voice='man')
         if from_number and re.search('^[\d\(\)\- \+]+$', from_number):
             r.number(from_number)
         else:
             r.client(default_client) # Defaults to client
-    return Response(str(resp), mimetype='text/xml')
+    return Response(str(response), mimetype='text/xml')
 
 @app.route("/send_web_msg", methods=['GET', 'POST'])
 def send_web_msg():
