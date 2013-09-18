@@ -13,6 +13,9 @@ from twilio.util import TwilioCapability
 TWILIO_ACCOUNT_SID = os.environ.get('TWILIO_ACCOUNT_SID')
 TWILIO_AUTH_TOKEN = os.environ.get('TWILIO_AUTH_TOKEN')
 TWILIO_NUMBER = os.environ.get('TWILIO_NUMBER')
+TWILIO_APP_SID = os.environ.get('TWILIO_APP_SID')
+default_number = "4153296152"
+default_client = "nyghtowl"
 
 # create an authenticated client that can make requests to Twilio for your
 # account.
@@ -59,12 +62,14 @@ def hello():
     response.say('Good luck on your Twilio quest!', voice='woman')
     return Response(str(response), mimetype='text/xml')
 
+# Provides text response to text sent
 @app.route('/incoming/sms')
 def income_sms():
     response = twiml.Response()
     response.sms('I just responded to a text message. Huzzah!')
     return Response(str(response), mimetype='text/xml')
  
+# Setup response for incoming call - first was one response and second provided menu
 # @app.route('/incoming/call')
 # def income_call():
 #     response = twiml.Response()
@@ -73,6 +78,7 @@ def income_sms():
 #         g.say("""Welcome to ACME widgets, press 1 for support. Press 2 for sales. Press 3 to leave a message. Press 4 to playback the last message. Press 5 to playback all messages. Press 0 to talk to a human.""")
 #     return Response(str(response), mimetype='text/xml')
 
+# Handle incoming call menu items
 # @app.route('/handle-key', methods=['GET', 'POST'])
 # def handle_key():
 #     response = twiml.Response()
@@ -107,20 +113,31 @@ def income_sms():
  
 #     return request.values.get("RecordingUrl", None)
 
-@voice
-    from_num = request.
+# Exercise 5 - Make inbound and outbound calls from a webpage
+@app.route('/voice', methods=['GET', 'POST'])
+def voice():
+    from_number = request.values.get('PhoneNumber', None)
+    response = twiml.Response()
+    # Nest <Client> Twiml inside of a <Dial> verb
+    with response.dial(callerId=default_number) as r:
+        #If theres a number and it looks like a phone number
+        r.say('Enter the digits on the screen', voice='man')
+        if from_number and re.search('^[\d\(\)\- \+]+$', from_number):
+            r.number(from_number)
+        else:
+            r.client(default_client) # Defaults to client
+    return Response(str(resp), mimetype='text/xml')
 
-@app.route("/send_webmsgs", methods=['GET', 'POST'])
-def send_webmsgs():
-    application_sid = "AP20bdac38a2e8acc56583056d895501fa"
+@app.route("/send_web_msg", methods=['GET', 'POST'])
+def send_web_msg():
 
     capability = TwilioCapability(TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN)
-    capability.allow_client_incoming("nyghtowl")
-    capability.allow_client_outgoing(application_sid)
+    capability.allow_client_incoming(default_client)
+    capability.allow_client_outgoing(TWILIO_APP_SID)
     cap_token = capability.generate()
     print cap_token
 
-    return render_template('send_webmsgs.html', cap_token=cap_token)
+    return render_template('send_web_msg.html', cap_token=cap_token, phone_number=default_number)
 
 if __name__ == '__main__':
     # Note that in production, you would want to disable debugging
