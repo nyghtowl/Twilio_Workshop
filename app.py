@@ -5,7 +5,7 @@ DON'T FORGET TO UPDATE THE ROUTE ON TWILIO DASHBOARD - esp if running off ngrok
 '''
 import os
 
-from flask import Flask, session, g
+from flask import Flask, flash
 from flask import Response
 from flask import request
 from flask import render_template
@@ -31,6 +31,7 @@ app = Flask(__name__)
 
 app.secret_key = 'key'
 
+# Workshop initial code
 # Render the home page
 @app.route('/')
 def index():
@@ -67,13 +68,14 @@ def hello():
     response.say('Good luck on your Twilio quest!', voice='woman')
     return Response(str(response), mimetype='text/xml')
 
-# Provides text response to text sent
+# Challenge 1 - Provides text response to text sent
 @app.route('/incoming/sms')
 def income_sms():
     response = twiml.Response()
     response.sms('I just responded to a text message. Huzzah!')
     return Response(str(response), mimetype='text/xml')
  
+# Challenge 1 & 2
 # Setup response for incoming call - first was one response and second provided menu
 @app.route('/incoming/call')
 def income_call():
@@ -83,6 +85,7 @@ def income_call():
         g.say("""Welcome to ACME widgets, press 1 for support. Press 2 for sales. Press 3 to leave a message. Press 4 to playback the last message. Press 5 to playback all messages. Press 0 to talk to a human.""")
     return Response(str(response), mimetype='text/xml')
 
+# Challenge 2 & 3
 # Handle incoming call menu items
 @app.route('/handle-key', methods=['GET', 'POST'])
 def handle_key():
@@ -118,7 +121,7 @@ def handle_recording():
  
     return request.values.get("RecordingUrl", None)
 
-# Exercise 5 - Make inbound and outbound calls from a webpage
+# Challenge 5 - Make inbound and outbound calls from a webpage
 @app.route('/voice', methods=['GET', 'POST'])
 def voice():
     from_number = request.values.get('PhoneNumber', None)
@@ -143,6 +146,54 @@ def send_web_msg():
     print cap_token
 
     return render_template('send_web_msg.html', cap_token=cap_token, phone_number=default_number)
+
+# Challenge 6 - Find available phone number and offer to purchase if found
+@app.route("/find_number")
+def find_number():
+
+    numbers = client.phone_numbers.search(area_code="415",
+        country="US",
+        type="local")
+    return render_template('find_number.html', numbers=numbers)
+
+@app.route("/purchase", methods=['POST'])
+def purchase():
+    # Purchase the first number in the list
+    chosen_number = request.form['chosen_number']
+    chosen_number.purchase()
+    flash ("It was purchased.")
+    # return (message=message)
+
+# Hacker Olympics - Receive text messgage to setup for sending to Arduino - 
+@app.route("/receive_msg")
+def receive_msg():
+    for message in client.messages.list():
+        print message.body
+        print message.messagesid        
+        print message.nummedia
+        print message.__dict__ # dictionary back of each of these to know keys
+        # loop through nummedia to find hte number of pictures
+        # print message.mediaurl ?
+        # MediaURL1 - provides the picture url
+    return ""
+
+# Pusher = Pusher( # Third party solution to post images in demo
+#     app_id
+#     key
+#       ?
+# )
+
+@app.route("/incoming")
+def incoming():
+    for i in range(int(request.form['NumMedia'])):
+        media_url = request.form['MediaUrl%i' % i]
+        media_content_type = request.form['MediaContentType%i' % i]
+        if content_type.startswith('image'):
+            pusher['demo'].triggers('image', {'url':media_url}) # Used for demo - put your own place to push content
+    return ""
+
+
+# local host 4040 - gives info on twilio
 
 if __name__ == '__main__':
     # Note that in production, you would want to disable debugging

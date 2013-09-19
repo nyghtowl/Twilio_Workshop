@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8"></meta>
+    <title>Send Messages Through Twilio</title>
+
+</head>
+<body>
+    <!-- A simple UI to test our Twilio back end -->
+    <div id="content">
+
+    <div>
+        {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+
+            <div class="span2"></div>
+            <div class="span8 alert alert-{{ category }}">
+                <a class="close" data-dismiss="alert" href="#">&times;</a>
+                {{ message }}
+            </div>
+            <div class="span2"></div>
+
+            {% endfor %}
+        {% endif %}
+        {% endwith %}
+    </div>
+    <div>
+        {{ numbers }}
+    </div>
+
+    <div>  
+        <form action="{{url_for('purchase')}}" method="POST">
+            <input id="top_coord" name="choose_number"></input>
+            <button type="submit">Submit</button>
+        </form>
+    </div>
+    
+    </div>
+
+    <!-- Some dirty JavaScript to help drive our UI -->
+    <script src="/static/js/ui.js"></script>
+    <!-- Some ajax magic to hit our back end and make calls/send messages -->
+    <script src="/static/js/form.js"></script>
+</body>
+</html>
