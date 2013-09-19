@@ -5,10 +5,10 @@ DON'T FORGET TO UPDATE THE ROUTE ON TWILIO DASHBOARD - esp if running off ngrok
 '''
 import os
 
-from flask import Flask, flash
+from flask import Flask
 from flask import Response
 from flask import request
-from flask import render_template
+from flask import render_template, redirect, flash, url_for
 from twilio import twiml
 from twilio.rest import TwilioRestClient
 from twilio.util import TwilioCapability
@@ -150,19 +150,25 @@ def send_web_msg():
 # Challenge 6 - Find available phone number and offer to purchase if found
 @app.route("/find_number")
 def find_number():
-
+    phone_num =[]
     numbers = client.phone_numbers.search(area_code="415",
         country="US",
         type="local")
-    return render_template('find_number.html', numbers=numbers)
 
-@app.route("/purchase", methods=['POST'])
+    print "find num"
+    for number in numbers:
+        phone_num.append(number.phone_number)
+
+    return render_template('find_number.html', numbers=phone_num)
+
+@app.route("/purchase", methods=['POST', 'GET'])
 def purchase():
     # Purchase the first number in the list
     chosen_number = request.form['chosen_number']
-    chosen_number.purchase()
-    flash ("It was purchased.")
-    # return (message=message)
+    print chosen_number
+    print type(chosen_number)
+    client.phone_numbers.purchase(phone_number=chosen_number)
+    return render_template('purchase.html')
 
 # Hacker Olympics - Receive text messgage to setup for sending to Arduino - 
 @app.route("/receive_msg")
@@ -177,6 +183,7 @@ def receive_msg():
         # MediaURL1 - provides the picture url
     return ""
 
+# Code from Demo about how receive images - has to go through shortcodes
 # Pusher = Pusher( # Third party solution to post images in demo
 #     app_id
 #     key
