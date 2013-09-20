@@ -165,10 +165,19 @@ def find_number():
 def purchase():
     # Purchase the first number in the list
     chosen_number = request.form['chosen_number']
-    print chosen_number
-    print type(chosen_number)
     client.phone_numbers.purchase(phone_number=chosen_number)
     return render_template('purchase.html')
+
+#Bonus
+@app.route("/current_number")
+def current_number():
+    # Print current number
+    # number = client.phone_numbers.get(TWILIO_APP_SID)
+
+    numbers = client.phone_numbers.list()
+    for number in numbers:
+       print number.phone_number
+    return ""
 
 # Hacker Olympics - Receive text messgage to setup for sending to Arduino - 
 @app.route("/receive_msg")
