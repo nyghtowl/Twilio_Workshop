@@ -121,6 +121,21 @@ def handle_recording():
  
     return request.values.get("RecordingUrl", None)
 
+# Challenge 4 
+@app.route("/run_game")
+def run_game():
+    # message = client.messages.list():
+    #     print message.body
+    #     print message.to
+    message = client.messages.create(
+        body="Shall We Play a Game!",  # Message body, if any
+        to="+14152157178",
+        from_="+14153296152",
+    )
+    print message.
+
+    return ""
+
 # Challenge 5 - Make inbound and outbound calls from a webpage
 @app.route('/voice', methods=['GET', 'POST'])
 def voice():
