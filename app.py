@@ -121,20 +121,59 @@ def handle_recording():
  
     return request.values.get("RecordingUrl", None)
 
-# Challenge 4 
-@app.route("/run_game")
+# Challenge 4 - Create an sms quiz game
+@app.route("/quiz_game")
 def run_game():
-    # message = client.messages.list():
+    response = twiml.Response()
+    reponse_scrub = response.lowercase
+
+    from_number = request.values.get('From', None)
+
+    questions = { 
+            0: "What word is shorter when you add two letters to it?",
+            1: "What occurs once in a minute, twice in a moment and never in one thousand years?",
+            2: "What kind of tree is carried in your hand?",
+            3: "Thanks for playing."
+    }
+
+    answers = { 
+            1:"shorter", 
+            2:"letter m", 
+            3:"palm"}
+
+    track_user = {} # phone_number:[count, score]
+
+    if from_number not in track_user:
+        track_user[from_number] = [0,0]
+        message = "Shall we play a game? %s" % questions[0]
+
+    else:
+        game_round = tracker_user[from_number][0]
+        score = tracker_user[from_number][1]
+
+        if answers[game_round] == reponse_scrub:
+            score += 10
+            message = "Correct Answer. You have %s points out of 30. %s" (score, questions[game_round])
+            game_round += 1
+
+        else:                            
+            message = "Wrong answer. We were looking for %s. Your score is %s out of 30. %s" (answers[game_round], score, questions[game_round])
+
+ 
+    return str(response)
+
+    # for message in client.messages.list():
     #     print message.body
     #     print message.to
-    message = client.messages.create(
-        body="Shall We Play a Game!",  # Message body, if any
-        to="+14152157178",
-        from_="+14153296152",
-    )
-    print message.
+    #     print message.__dict__
+    # message = client.messages.create(
+    #     body="Shall We Play a Game!",  # Message body, if any
+    #     to="+14152157178",
+    #     from="+14153296152",
+    # )
+    # print message.body
 
-    return ""
+    # return ""
 
 # Challenge 5 - Make inbound and outbound calls from a webpage
 @app.route('/voice', methods=['GET', 'POST'])
