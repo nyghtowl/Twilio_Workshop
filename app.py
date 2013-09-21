@@ -12,6 +12,7 @@ from flask import render_template, redirect, flash, url_for
 from twilio import twiml
 from twilio.rest import TwilioRestClient
 from twilio.util import TwilioCapability
+from beaker.middleware import SessionMiddleware
 
 
 # Pull in configuration from system environment variables
@@ -26,10 +27,16 @@ default_client = "nyghtowl"
 # account.
 client = TwilioRestClient(TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN)
 
-# Create a Flask web app
-app = Flask(__name__)
+session_options = {
+    'session.type': 'ext:memcached',
+    'session.url': '127.0.0.1.11211',
+    'session.data_dir': './cache',
+}
 
 app.secret_key = 'key'
+
+# Create a Flask web app
+app = Flask(__name__)
 
 # Workshop initial code
 # Render the home page
@@ -125,9 +132,15 @@ def handle_recording():
 @app.route("/quiz_game")
 def run_game():
     response = twiml.Response()
-    reponse_scrub = response.lowercase
+    # reponse_scrub = response.lowercase
 
     from_number = request.values.get('From', None)
+    body = request.values.get('Body', None)
+
+    track_user = {} # phone_number:[count, score]
+
+    print 1, body
+    print 2, from_number
 
     questions = { 
             0: "What word is shorter when you add two letters to it?",
@@ -141,26 +154,26 @@ def run_game():
             2:"letter m", 
             3:"palm"}
 
-    track_user = {} # phone_number:[count, score]
-
     if from_number not in track_user:
         track_user[from_number] = [0,0]
         message = "Shall we play a game? %s" % questions[0]
-
+        print 3, track_user
     else:
         game_round = tracker_user[from_number][0]
         score = tracker_user[from_number][1]
 
-        if answers[game_round] == reponse_scrub:
-            score += 10
+        if answers[game_round] == body:
+            tracker_user[from_number][0] += 1
+            tracker_user[from_number][1] += 10
             message = "Correct Answer. You have %s points out of 30. %s" (score, questions[game_round])
-            game_round += 1
-
         else:                            
             message = "Wrong answer. We were looking for %s. Your score is %s out of 30. %s" (answers[game_round], score, questions[game_round])
 
- 
-    return str(response)
+    print 4, game_round
+    print 5, score
+
+    response.message(message)
+    return Response(str(response), mimetype='text/xml')
 
     # for message in client.messages.list():
     #     print message.body
