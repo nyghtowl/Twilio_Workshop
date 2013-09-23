@@ -12,8 +12,6 @@ from flask import render_template, redirect, flash, url_for, session
 from twilio import twiml
 from twilio.rest import TwilioRestClient
 from twilio.util import TwilioCapability
-from beaker.middleware import SessionMiddleware
-import time, Cookie
 import re
 
 # Pull in configuration from system environment variables
@@ -27,14 +25,6 @@ default_client = "nyghtowl"
 # create an authenticated client that can make requests to Twilio for your
 # account.
 client = TwilioRestClient(TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN)
-
-# session_opts = {
-#     'session.type': 'cookie',
-#     'session.cookie_domain': './4db7c105.ngrok.com',
-#     'session.validate_key': 'myvalidatekey',
-#     'session.cookie_expires': False,
-#     'session.data_dir': '/tmp/cache/beaker'
-# }
 
 # Create a Flask web app
 app = Flask(__name__)
@@ -295,7 +285,5 @@ def incoming():
 # local host 4040 - gives info on twilio
 
 if __name__ == '__main__':
-    # app.wsgi_app = SessionMiddleware(app.wsgi_app, session_opts)
-
     # Note that in production, you would want to disable debugging
     app.run(debug=True)
