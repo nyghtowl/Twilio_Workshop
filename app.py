@@ -8,12 +8,13 @@ import os
 from flask import Flask
 from flask import Response
 from flask import request
-from flask import render_template, redirect, flash, url_for
+from flask import render_template, redirect, flash, url_for, session
 from twilio import twiml
 from twilio.rest import TwilioRestClient
 from twilio.util import TwilioCapability
 from beaker.middleware import SessionMiddleware
-
+import time, Cookie
+import re
 
 # Pull in configuration from system environment variables
 TWILIO_ACCOUNT_SID = os.environ.get('TWILIO_ACCOUNT_SID')
@@ -27,16 +28,20 @@ default_client = "nyghtowl"
 # account.
 client = TwilioRestClient(TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN)
 
-session_options = {
-    'session.type': 'ext:memcached',
-    'session.url': '127.0.0.1.11211',
-    'session.data_dir': './cache',
-}
-
-app.secret_key = 'key'
+# session_opts = {
+#     'session.type': 'cookie',
+#     'session.cookie_domain': './4db7c105.ngrok.com',
+#     'session.validate_key': 'myvalidatekey',
+#     'session.cookie_expires': False,
+#     'session.data_dir': '/tmp/cache/beaker'
+# }
 
 # Create a Flask web app
 app = Flask(__name__)
+app.config.from_object(__name__)
+
+app.secret_key = 'key'
+
 
 # Workshop initial code
 # Render the home page
@@ -128,65 +133,76 @@ def handle_recording():
  
     return request.values.get("RecordingUrl", None)
 
+def simplify_txt(submitted_txt):
+    response_letters = re.sub(r'\W+', '', submitted_txt)
+    return response_letters.lower()
+
+
 # Challenge 4 - Create an sms quiz game
 @app.route("/quiz_game")
-def run_game():
+def quiz_game():
     response = twiml.Response()
-    # reponse_scrub = response.lowercase
 
-    from_number = request.values.get('From', None)
+    from_number = str(request.values.get('From', None))
     body = request.values.get('Body', None)
+    simplify_body = simplify_txt(body)
 
-    track_user = {} # phone_number:[count, score]
-
-    print 1, body
+    print 1, simplify_body
     print 2, from_number
 
     questions = { 
             0: "What word is shorter when you add two letters to it?",
             1: "What occurs once in a minute, twice in a moment and never in one thousand years?",
             2: "What kind of tree is carried in your hand?",
-            3: "Thanks for playing."
+            3: "Thanks for playing.",
+            4: ""
     }
 
-    answers = { 
+    simplify_answers = { 
+            1:"shorter", 
+            2:"letterm", 
+            3:"palm",
+            4:""
+            }
+
+    print_answers = { 
             1:"shorter", 
             2:"letter m", 
-            3:"palm"}
+            3:"palm",
+            4:""
+            }
 
-    if from_number not in track_user:
-        track_user[from_number] = [0,0]
+    print 3, session
+
+    # if from_number not in track_user:
+    if from_number not in session:
+        session[from_number] = 0
+        counter = session.get('counter', 0)
+        counter += 1
+        session['counter'] = counter
         message = "Shall we play a game? %s" % questions[0]
-        print 3, track_user
     else:
-        game_round = tracker_user[from_number][0]
-        score = tracker_user[from_number][1]
+        game_round = session['counter']
 
-        if answers[game_round] == body:
-            tracker_user[from_number][0] += 1
-            tracker_user[from_number][1] += 10
-            message = "Correct Answer. You have %s points out of 30. %s" (score, questions[game_round])
-        else:                            
-            message = "Wrong answer. We were looking for %s. Your score is %s out of 30. %s" (answers[game_round], score, questions[game_round])
+        if simplify_answers[game_round] == simplify_body:
+            session[from_number] += 10
+            score = session[from_number]
+            message = "Correct Answer. You have %d points out of 30. %s" % (score, questions[game_round])
+        else:
+            score = session[from_number]
+            message = "Wrong answer. We were looking for %s. Your score is %d out of 30. %s" % (print_answers[game_round], score, questions[game_round])
 
-    print 4, game_round
-    print 5, score
+        session['counter'] += 1
 
-    response.message(message)
+    if session['counter'] > 3:
+        session.pop(from_number, None)
+        session['counter'] = 0
+
+    print 4, session
+
+    response.sms(message)
     return Response(str(response), mimetype='text/xml')
 
-    # for message in client.messages.list():
-    #     print message.body
-    #     print message.to
-    #     print message.__dict__
-    # message = client.messages.create(
-    #     body="Shall We Play a Game!",  # Message body, if any
-    #     to="+14152157178",
-    #     from="+14153296152",
-    # )
-    # print message.body
-
-    # return ""
 
 # Challenge 5 - Make inbound and outbound calls from a webpage
 @app.route('/voice', methods=['GET', 'POST'])
@@ -279,5 +295,7 @@ def incoming():
 # local host 4040 - gives info on twilio
 
 if __name__ == '__main__':
+    # app.wsgi_app = SessionMiddleware(app.wsgi_app, session_opts)
+
     # Note that in production, you would want to disable debugging
     app.run(debug=True)
