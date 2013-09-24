@@ -142,22 +142,22 @@ def quiz_game():
 
     questions = { 
             0: "What word is shorter when you add two letters to it?",
-            1: "What occurs once in a minute, twice in a moment and never in one thousand years?",
+            1: "If I drink, I die. If i eat, I am fine. What am I?",
             2: "What kind of tree is carried in your hand?",
             3: "Thanks for playing.",
             4: ""
     }
 
     simplify_answers = { 
-            1:"shorter", 
-            2:"letterm", 
+            1:"short", 
+            2:"fire", 
             3:"palm",
             4:""
             }
 
     print_answers = { 
-            1:"shorter", 
-            2:"letter m", 
+            1:"short", 
+            2:"fire", 
             3:"palm",
             4:""
             }
